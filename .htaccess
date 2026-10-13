@@ -1,0 +1,28 @@
+# Disable MultiViews
+Options -MultiViews
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+
+# 1. Force HTTPS on InfinityFree
+RewriteCond %{HTTP:X-Forwarded-Proto} !https
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+# 2. Redirect index.html to root (/)
+RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /index\.html\ HTTP/
+RewriteRule ^index\.html$ / [R=301,L]
+
+# 3. Redirect artikel/index.html to artikel/
+RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /artikel/index\.html\ HTTP/
+RewriteRule ^artikel/index\.html$ /artikel/ [R=301,L]
+
+# 4. Redirect file.html to /file (external redirect for clean URLs)
+RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /([^.]+)\.html\ HTTP/
+RewriteRule ^([^.]+)\.html$ /$1 [R=301,L]
+
+# 5. Internally rewrite /file to file.html (supports subdirectories like /artikel/file)
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}\.html -f
+RewriteRule ^(.*?)/?$ $1.html [L]
+</IfModule>
