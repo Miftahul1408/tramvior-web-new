@@ -21,7 +21,11 @@ RewriteRule ^artikel/index\.html$ /artikel/ [R=301,L]
 RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /([^.]+)\.html\ HTTP/
 RewriteRule ^([^.]+)\.html$ /$1 [R=301,L]
 
-# 5. Internally rewrite /file to file.html (supports subdirectories like /artikel/file)
+# 5. Keep the admin panel available at /admin
+RewriteRule ^admin/$ /admin [R=301,L]
+RewriteRule ^admin/?$ admin.html [L]
+
+# 6. Internally rewrite /file to file.html (supports subdirectories like /artikel/file)
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME}\.html -f
 RewriteRule ^(.*?)/?$ $1.html [L]

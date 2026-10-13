@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#0B1C63">
+  <title>Admin TRAMVIOR — Ringkasan</title>
+  <link rel="icon" href="assets/img/favicon.ico" sizes="any">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body class="admin-body">
+  <div class="admin-shell">
+    <aside class="admin-sidebar" id="admin-sidebar" aria-label="Navigasi admin">
+      <a class="admin-brand" href="index.html">
+        <img src="assets/img/logo-header.png" alt="" width="42" height="42">
+        <span>TRAMVIOR<small>ADMIN PANEL</small></span>
+      </a>
+
+      <div class="sidebar-label">WORKSPACE</div>
+      <nav class="admin-nav">
+        <button class="admin-nav-link is-active" type="button" data-view="overview" aria-current="page">
+          <span class="nav-icon" aria-hidden="true">⌂</span> Ringkasan
+        </button>
+        <button class="admin-nav-link" type="button" data-view="articles">
+          <span class="nav-icon" aria-hidden="true">▤</span> Artikel
+          <span class="nav-count" id="nav-article-count">5</span>
+        </button>
+        <button class="admin-nav-link" type="button" data-view="reviews">
+          <span class="nav-icon" aria-hidden="true">☆</span> Ulasan
+          <span class="nav-count" id="nav-review-count">0</span>
+        </button>
+        <button class="admin-nav-link" type="button" data-view="registrations">
+          <span class="nav-icon" aria-hidden="true">♧</span> Pendaftaran
+        </button>
+        <button class="admin-nav-link" type="button" data-view="site">
+          <span class="nav-icon" aria-hidden="true">◫</span> Halaman website
+        </button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="preview-card">
+          <span class="preview-icon" aria-hidden="true">✦</span>
+          <strong>Mode pratinjau</strong>
+          <p>Panel ini berjalan di browser dan belum terhubung ke server.</p>
+        </div>
+        <a class="sidebar-site-link" href="index.html">
+          <span aria-hidden="true">↗</span> Lihat website
+        </a>
+        <div class="admin-profile">
+          <span class="avatar">T</span>
+          <span><strong>Tim TRAMVIOR</strong><small>Pengelola website</small></span>
+          <span class="profile-more" aria-hidden="true">···</span>
+        </div>
+      </div>
+    </aside>
+
+    <div class="admin-main">
+      <header class="admin-topbar">
+        <button class="mobile-menu-button" id="sidebar-toggle" type="button" aria-label="Buka navigasi" aria-expanded="false">☰</button>
+        <div class="topbar-breadcrumb"><span>Workspace</span><span class="breadcrumb-divider">/</span><strong id="topbar-page">Ringkasan</strong></div>
+        <div class="topbar-actions">
+          <span class="preview-status"><span></span> Pratinjau lokal</span>
+          <a class="topbar-site-link" href="index.html" aria-label="Buka website TRAMVIOR">↗</a>
+        </div>
+      </header>
+
+      <main class="admin-content">
+        <section class="admin-view is-visible" id="view-overview" aria-labelledby="overview-title">
+          <div class="page-heading">
+            <div>
+              <div class="admin-eyebrow" id="dashboard-date"></div>
+              <h1 id="overview-title">Selamat datang, Tim TRAMVIOR <span aria-hidden="true">👋</span></h1>
+              <p>Berikut ringkasan konten website TRAMVIOR yang saat ini tersedia.</p>
+            </div>
+            <button class="admin-button admin-button-primary" type="button" data-create-article>
+              <span aria-hidden="true">＋</span> Tulis artikel
+            </button>
+          </div>
+
+          <div class="notice-banner">
+            <span class="notice-symbol" aria-hidden="true">i</span>
+            <p><strong>Panel demonstrasi.</strong> Website ini menggunakan file statis; belum ada login, database, analitik, atau penyimpanan pendaftaran di server. Draft yang dibuat di sini hanya tersimpan di browser ini.</p>
+            <button class="notice-dismiss" type="button" aria-label="Tutup pemberitahuan">×</button>
+          </div>
+
+          <div class="metric-grid">
+            <article class="metric-card">
+              <div class="metric-top"><span>Artikel terbit</span><span class="metric-icon metric-icon-blue" aria-hidden="true">▤</span></div>
+              <strong class="metric-value" id="published-count">5</strong>
+              <span class="metric-note">Tercantum di halaman Artikel</span>
+            </article>
+            <article class="metric-card">
+              <div class="metric-top"><span>Draft lokal</span><span class="metric-icon metric-icon-violet" aria-hidden="true">✎</span></div>
+              <strong class="metric-value" id="draft-count">0</strong>
+              <span class="metric-note">Tersimpan di browser ini</span>
+            </article>
+            <article class="metric-card">
+              <div class="metric-top"><span>Halaman publik</span><span class="metric-icon metric-icon-teal" aria-hidden="true">◫</span></div>
+              <strong class="metric-value">6</strong>
+              <span class="metric-note">Termasuk halaman daftar artikel</span>
+            </article>
+            <article class="metric-card">
+              <div class="metric-top"><span>Pendaftaran tersimpan</span><span class="metric-icon metric-icon-orange" aria-hidden="true">♧</span></div>
+              <strong class="metric-value metric-unavailable">—</strong>
+              <span class="metric-note">Belum dikumpulkan ke database</span>
+            </article>
+          </div>
+
+          <div class="overview-grid">
+            <section class="panel-card article-overview">
+              <div class="panel-heading">
+                <div><h2>Artikel terbaru</h2><p>Konten yang saat ini tampil di website.</p></div>
+                <button class="text-button" type="button" data-open-view="articles">Lihat semua <span aria-hidden="true">→</span></button>
+              </div>
+              <div class="table-scroll">
+                <table class="admin-table">
+                  <thead><tr><th>JUDUL ARTIKEL</th><th>KATEGORI</th><th>STATUS</th><th></th></tr></thead>
+                  <tbody id="overview-article-list"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <aside class="panel-card category-panel">
+              <div class="panel-heading"><div><h2>Distribusi konten</h2><p>Artikel terbit per kategori.</p></div></div>
+              <div class="category-list" id="category-list"></div>
+              <a class="category-link" href="artikel/index.html">Lihat halaman artikel <span aria-hidden="true">↗</span></a>
+            </aside>
+          </div>
+
+          <section class="panel-card quick-panel">
+            <div class="panel-heading"><div><h2>Akses cepat</h2><p>Kelola bagian website yang tersedia saat ini.</p></div></div>
+            <div class="quick-grid">
+              <button class="quick-action" type="button" data-open-view="articles"><span class="quick-action-icon">▤</span><span><strong>Kelola artikel</strong><small>Lihat daftar dan buat draft</small></span><span class="quick-arrow">→</span></button>
+              <button class="quick-action" type="button" data-open-view="reviews"><span class="quick-action-icon quick-action-orange">☆</span><span><strong>Kelola ulasan siswa</strong><small>Tinjau dan tampilkan di beranda</small></span><span class="quick-arrow">→</span></button>
+              <button class="quick-action" type="button" data-open-view="registrations"><span class="quick-action-icon quick-action-teal">♧</span><span><strong>Lihat alur pendaftaran</strong><small>Periksa cara kerja formulir kontak</small></span><span class="quick-arrow">→</span></button>
+              <button class="quick-action" type="button" data-open-view="site"><span class="quick-action-icon quick-action-violet">◫</span><span><strong>Jelajahi halaman</strong><small>Daftar halaman publik website</small></span><span class="quick-arrow">→</span></button>
+            </div>
+          </section>
+          <footer class="admin-footer">TRAMVIOR Admin <span>·</span> Panel lokal untuk pengelolaan konten statis</footer>
+        </section>
+
+        <section class="admin-view" id="view-articles" aria-labelledby="articles-title" hidden>
+          <div class="page-heading">
+            <div><div class="admin-eyebrow">KONTEN WEBSITE</div><h1 id="articles-title">Artikel</h1><p>Kelola daftar artikel yang diterbitkan di website dan draft lokal.</p></div>
+            <button class="admin-button admin-button-primary" type="button" data-create-article><span aria-hidden="true">＋</span> Tulis artikel</button>
+          </div>
+          <div class="notice-banner notice-banner-compact"><span class="notice-symbol" aria-hidden="true">i</span><p>Artikel terbit dikelola sebagai file HTML. Draft baru di panel ini belum diterbitkan dan hanya tersimpan di browser ini.</p></div>
+          <section class="panel-card content-panel">
+            <div class="content-toolbar">
+              <div class="filter-tabs" role="group" aria-label="Filter artikel">
+                <button class="filter-tab is-selected" type="button" data-filter="all">Semua <span id="filter-all-count">5</span></button>
+                <button class="filter-tab" type="button" data-filter="published">Terbit <span id="filter-published-count">5</span></button>
+                <button class="filter-tab" type="button" data-filter="draft">Draft <span id="filter-draft-count">0</span></button>
+              </div>
+              <label class="search-box"><span aria-hidden="true">⌕</span><input id="article-search" type="search" placeholder="Cari artikel..." aria-label="Cari artikel"></label>
+            </div>
+            <div class="table-scroll">
+              <table class="admin-table article-table">
+                <thead><tr><th>JUDUL ARTIKEL</th><th>KATEGORI</th><th>TERAKHIR DIUBAH</th><th>STATUS</th><th class="actions-heading">AKSI</th></tr></thead>
+                <tbody id="article-list"></tbody>
+              </table>
+              <div class="empty-state" id="article-empty" hidden><span aria-hidden="true">⌕</span><strong>Artikel tidak ditemukan</strong><p>Coba ubah kata kunci atau filter yang dipilih.</p></div>
+            </div>
+            <div class="table-footnote"><span class="status-dot"></span> Data artikel terbit merujuk ke halaman statis yang ada di website.</div>
+          </section>
+          <footer class="admin-footer">TRAMVIOR Admin <span>·</span> Artikel</footer>
+        </section>
+
+        <section class="admin-view" id="view-reviews" aria-labelledby="reviews-title" hidden>
+          <div class="page-heading">
+            <div><div class="admin-eyebrow">KONTEN BERANDA</div><h1 id="reviews-title">Ulasan siswa</h1><p>Kelola ulasan yang ditampilkan sebagai kartu di bagian Ulasan siswa pada beranda.</p></div>
+            <button class="admin-button admin-button-primary" type="button" data-create-review><span aria-hidden="true">＋</span> Tambah ulasan</button>
+          </div>
+          <div class="notice-banner"><span class="notice-symbol" aria-hidden="true">i</span><p><strong>Penyimpanan lokal browser.</strong> Ulasan terbit tampil di beranda pada browser yang sama. Situs statis ini belum memiliki database/API, jadi perubahan tidak tersinkron untuk pengunjung lain atau perangkat berbeda.</p></div>
+          <div class="review-metrics">
+            <article class="metric-card"><div class="metric-top"><span>Total ulasan</span><span class="metric-icon metric-icon-blue" aria-hidden="true">☆</span></div><strong class="metric-value" id="review-total">0</strong><span class="metric-note">Tersimpan di browser ini</span></article>
+            <article class="metric-card"><div class="metric-top"><span>Ditampilkan</span><span class="metric-icon metric-icon-teal" aria-hidden="true">✓</span></div><strong class="metric-value" id="review-published">0</strong><span class="metric-note">Terlihat di beranda browser ini</span></article>
+            <article class="metric-card"><div class="metric-top"><span>Menunggu tinjauan</span><span class="metric-icon metric-icon-orange" aria-hidden="true">◷</span></div><strong class="metric-value" id="review-pending">0</strong><span class="metric-note">Belum ditampilkan di beranda</span></article>
+          </div>
+          <section class="panel-card content-panel">
+            <div class="content-toolbar">
+              <div class="filter-tabs" role="group" aria-label="Filter ulasan">
+                <button class="review-filter-tab filter-tab is-selected" type="button" data-review-filter="all">Semua <span id="review-filter-all-count">0</span></button>
+                <button class="review-filter-tab filter-tab" type="button" data-review-filter="published">Ditampilkan <span id="review-filter-published-count">0</span></button>
+                <button class="review-filter-tab filter-tab" type="button" data-review-filter="pending">Menunggu <span id="review-filter-pending-count">0</span></button>
+              </div>
+              <label class="search-box"><span aria-hidden="true">⌕</span><input id="review-search" type="search" placeholder="Cari nama atau ulasan..." aria-label="Cari ulasan"></label>
+            </div>
+            <div class="table-scroll">
+              <table class="admin-table review-table">
+                <thead><tr><th>NAMA &amp; SEKOLAH</th><th>ULASAN</th><th>RATING</th><th>STATUS</th><th class="actions-heading">AKSI</th></tr></thead>
+                <tbody id="review-list"></tbody>
+              </table>
+              <div class="empty-state" id="review-empty"><span aria-hidden="true">☆</span><strong>Belum ada ulasan</strong><p>Tambahkan ulasan siswa yang sudah memberikan persetujuan untuk ditampilkan.</p></div>
+            </div>
+            <div class="table-footnote"><span class="status-dot"></span> Beranda hanya menampilkan maksimal 6 ulasan yang disetujui.</div>
+          </section>
+          <footer class="admin-footer">TRAMVIOR Admin <span>·</span> Ulasan siswa</footer>
+        </section>
+
+        <section class="admin-view" id="view-registrations" aria-labelledby="registrations-title" hidden>
+          <div class="page-heading">
+            <div><div class="admin-eyebrow">KONTAK &amp; EARLY ACCESS</div><h1 id="registrations-title">Pendaftaran</h1><p>Informasi alur formulir pendaftaran yang terpasang di website.</p></div>
+            <a class="admin-button admin-button-primary" href="kontak.html#daftar">Buka halaman kontak <span aria-hidden="true">↗</span></a>
+          </div>
+          <div class="notice-banner"><span class="notice-symbol" aria-hidden="true">!</span><p><strong>Data pendaftar tidak tersedia di panel ini.</strong> Formulir kontak saat ini membuka WhatsApp, bukan mengirim data ke penyimpanan website. Pendaftaran yang dikirim tidak akan muncul di dashboard ini.</p></div>
+          <div class="registration-grid">
+            <section class="panel-card registration-card">
+              <div class="registration-icon">↗</div><div class="admin-eyebrow">ALUR SAAT INI</div>
+              <h2>Formulir diarahkan ke WhatsApp</h2>
+              <p>Setelah formulir dikirim, browser menyiapkan pesan pendaftaran dan membuka WhatsApp Tim TRAMVIOR. Pengelolaan pendaftar dilakukan melalui percakapan WhatsApp.</p>
+              <a class="inline-link" href="kontak.html#daftar">Lihat formulir pendaftaran <span aria-hidden="true">→</span></a>
+            </section>
+            <section class="panel-card registration-card registration-next">
+              <div class="registration-icon">＋</div><div class="admin-eyebrow">JIKA MEMBUTUHKAN DASHBOARD DATA</div>
+              <h2>Perlu koneksi backend</h2>
+              <p>Agar data pendaftar dapat dicari dan dikelola di sini, website perlu API/backend, basis data, autentikasi admin, serta perubahan pada formulir kontak.</p>
+              <span class="integration-badge"><span></span> Belum terhubung</span>
+            </section>
+          </div>
+          <footer class="admin-footer">TRAMVIOR Admin <span>·</span> Pendaftaran</footer>
+        </section>
+
+        <section class="admin-view" id="view-site" aria-labelledby="site-title" hidden>
+          <div class="page-heading">
+            <div><div class="admin-eyebrow">STRUKTUR WEBSITE</div><h1 id="site-title">Halaman website</h1><p>Daftar halaman publik dan berkas HTML yang menjadi sumber kontennya.</p></div>
+            <a class="admin-button admin-button-secondary" href="index.html">Lihat website <span aria-hidden="true">↗</span></a>
+          </div>
+          <div class="notice-banner notice-banner-compact"><span class="notice-symbol" aria-hidden="true">i</span><p>Situs dibangun dengan HTML, CSS, dan JavaScript statis. Perubahan halaman publik dilakukan pada file proyek, bukan dari panel browser ini.</p></div>
+          <section class="panel-card site-pages-panel">
+            <div class="panel-heading"><div><h2>Halaman utama</h2><p>Halaman promosi dan informasi TRAMVIOR.</p></div><span class="page-total">6 halaman</span></div>
+            <div class="site-page-list">
+              <a class="site-page-row" href="index.html"><span class="site-page-icon">⌂</span><span><strong>Beranda</strong><small>index.html</small></span><span class="site-page-tag">Publik</span><span class="site-page-arrow">↗</span></a>
+              <a class="site-page-row" href="tentang.html"><span class="site-page-icon">◎</span><span><strong>Tentang</strong><small>tentang.html</small></span><span class="site-page-tag">Publik</span><span class="site-page-arrow">↗</span></a>
+              <a class="site-page-row" href="fitur.html"><span class="site-page-icon">✦</span><span><strong>Fitur</strong><small>fitur.html</small></span><span class="site-page-tag">Publik</span><span class="site-page-arrow">↗</span></a>
+              <a class="site-page-row" href="harga.html"><span class="site-page-icon">◇</span><span><strong>Harga</strong><small>harga.html</small></span><span class="site-page-tag">Publik</span><span class="site-page-arrow">↗</span></a>
+              <a class="site-page-row" href="kontak.html"><span class="site-page-icon">♧</span><span><strong>Kontak</strong><small>kontak.html</small></span><span class="site-page-tag">Publik</span><span class="site-page-arrow">↗</span></a>
+              <a class="site-page-row" href="artikel/index.html"><span class="site-page-icon">▤</span><span><strong>Daftar artikel</strong><small>artikel/index.html</small></span><span class="site-page-tag">Publik</span><span class="site-page-arrow">↗</span></a>
+            </div>
+          </section>
+          <footer class="admin-footer">TRAMVIOR Admin <span>·</span> Halaman website</footer>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+  <dialog class="article-dialog" id="article-dialog" aria-labelledby="dialog-title">
+    <form id="draft-form">
+      <div class="dialog-heading"><div><div class="admin-eyebrow">EDITOR DRAFT LOKAL</div><h2 id="dialog-title">Tulis artikel</h2></div><button class="dialog-close" type="button" data-close-dialog aria-label="Tutup">×</button></div>
+      <p class="dialog-intro">Draft ini tidak akan terbit di website. Konten hanya tersimpan di penyimpanan browser yang digunakan.</p>
+      <input type="hidden" id="draft-id">
+      <label class="admin-field"><span>Judul artikel <b>*</b></span><input id="draft-title" name="title" type="text" maxlength="120" placeholder="Contoh: Tips Belajar Efektif untuk Siswa SMK" required></label>
+      <label class="admin-field"><span>Kategori <b>*</b></span><select id="draft-category" name="category" required><option value="">Pilih kategori</option><option>Dunia Kerja</option><option>Tips Belajar</option><option>Karier Global</option><option>Kurikulum SMK</option><option>Produktivitas</option><option>Lainnya</option></select></label>
+      <label class="admin-field"><span>Ringkasan</span><textarea id="draft-excerpt" name="excerpt" rows="3" maxlength="220" placeholder="Tuliskan ringkasan singkat untuk artikel..."></textarea></label>
+      <div class="dialog-note"><span aria-hidden="true">i</span> Untuk menerbitkan artikel, file HTML website perlu diperbarui secara terpisah.</div>
+      <div class="dialog-actions"><button class="admin-button admin-button-secondary" type="button" data-close-dialog>Batal</button><button class="admin-button admin-button-primary" type="submit">Simpan draft</button></div>
+    </form>
+  </dialog>
+  <dialog class="article-dialog" id="review-dialog" aria-labelledby="review-dialog-title">
+    <form id="review-form">
+      <div class="dialog-heading"><div><div class="admin-eyebrow">ULASAN SISWA</div><h2 id="review-dialog-title">Tambah ulasan</h2></div><button class="dialog-close" type="button" data-close-review-dialog aria-label="Tutup">×</button></div>
+      <p class="dialog-intro">Masukkan ulasan asli yang telah mendapat izin dari siswa untuk dipublikasikan.</p>
+      <input type="hidden" id="review-id">
+      <label class="admin-field"><span>Nama siswa <b>*</b></span><input id="review-name" type="text" maxlength="60" placeholder="Nama atau nama panggilan" required></label>
+      <label class="admin-field"><span>Sekolah <b>*</b></span><input id="review-school" type="text" maxlength="100" placeholder="Nama sekolah" required></label>
+      <label class="admin-field"><span>Jurusan / program</span><input id="review-program" type="text" maxlength="80" placeholder="Contoh: Otomotif"></label>
+      <label class="admin-field"><span>Rating <b>*</b></span><select id="review-rating" required><option value="5">★★★★★ — 5 bintang</option><option value="4">★★★★☆ — 4 bintang</option><option value="3">★★★☆☆ — 3 bintang</option><option value="2">★★☆☆☆ — 2 bintang</option><option value="1">★☆☆☆☆ — 1 bintang</option></select></label>
+      <label class="admin-field"><span>Isi ulasan <b>*</b></span><textarea id="review-quote" rows="4" maxlength="350" placeholder="Tulis pengalaman belajar siswa..." required></textarea></label>
+      <label class="review-approval"><input id="review-approved" type="checkbox"> <span>Saya sudah mendapat izin siswa untuk menampilkan ulasan ini di website.</span></label>
+      <div class="dialog-note"><span aria-hidden="true">i</span> Ulasan tanpa persetujuan akan tersimpan sebagai menunggu tinjauan.</div>
+      <div class="dialog-actions"><button class="admin-button admin-button-secondary" type="button" data-close-review-dialog>Batal</button><button class="admin-button admin-button-primary" type="submit">Simpan ulasan</button></div>
+    </form>
+  </dialog>
+  <div class="admin-toast" id="admin-toast" role="status" aria-live="polite"></div>
+  <script src="assets/js/admin.js" defer></script>
+</body>
+</html>
