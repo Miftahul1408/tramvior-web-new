@@ -1,0 +1,36 @@
+{
+  "rewrites": [
+    {
+      "source": "/admin",
+      "destination": "/admin.html"
+    },
+    {
+      "source": "/tentang",
+      "destination": "/tentang.html"
+    },
+    {
+      "source": "/fitur",
+      "destination": "/fitur.html"
+    },
+    {
+      "source": "/harga",
+      "destination": "/harga.html"
+    },
+    {
+      "source": "/kontak",
+      "destination": "/kontak.html"
+    },
+    {
+      "source": "/artikel",
+      "destination": "/artikel/index.html"
+    },
+    {
+      "source": "/artikel/",
+      "destination": "/artikel/index.html"
+    },
+    {
+      "source": "/artikel/:slug",
+      "destination": "/artikel/:slug.html"
+    }
+  ]
+}
