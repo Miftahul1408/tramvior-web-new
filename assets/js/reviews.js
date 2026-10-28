@@ -3,6 +3,44 @@ document.addEventListener('DOMContentLoaded', function () {
 
   var container = document.getElementById('student-reviews');
   if (!container) return;
+  var controls = document.getElementById('review-controls');
+  var previousButton = document.getElementById('review-previous');
+  var nextButton = document.getElementById('review-next');
+  var position = document.getElementById('review-position');
+
+  function getSlideStep() {
+    var card = container.querySelector('.review-card');
+    if (!card) return 0;
+    var styles = window.getComputedStyle(container);
+    return card.getBoundingClientRect().width + (parseFloat(styles.columnGap) || 0);
+  }
+
+  function updateControls() {
+    var cards = container.querySelectorAll('.review-card');
+    var step = getSlideStep();
+    if (!cards.length || !step) {
+      controls.hidden = true;
+      return;
+    }
+
+    var visibleCount = Math.max(1, Math.floor((container.clientWidth + 1) / step));
+    controls.hidden = cards.length <= visibleCount;
+    previousButton.disabled = container.scrollLeft <= 1;
+    nextButton.disabled = container.scrollLeft + container.clientWidth >= container.scrollWidth - 1;
+
+    var firstIndex = Math.min(cards.length - visibleCount, Math.round(container.scrollLeft / step));
+    var lastIndex = Math.min(cards.length, firstIndex + visibleCount);
+    position.textContent = 'Ulasan ' + (firstIndex + 1) + '–' + lastIndex + ' dari ' + cards.length;
+  }
+
+  previousButton.addEventListener('click', function () {
+    container.scrollBy({ left: -getSlideStep(), behavior: 'smooth' });
+  });
+  nextButton.addEventListener('click', function () {
+    container.scrollBy({ left: getSlideStep(), behavior: 'smooth' });
+  });
+  container.addEventListener('scroll', updateControls, { passive: true });
+  window.addEventListener('resize', updateControls);
 
   function getConfig() {
     var config = window.TRAMVIOR_SUPABASE;
@@ -48,6 +86,7 @@ document.addEventListener('DOMContentLoaded', function () {
       empty.className = 'review-empty';
       empty.textContent = 'Ulasan siswa akan segera hadir.';
       container.appendChild(empty);
+      updateControls();
       return;
     }
 
@@ -95,6 +134,7 @@ document.addEventListener('DOMContentLoaded', function () {
       card.appendChild(author);
       container.appendChild(card);
     });
+    updateControls();
   }
 
   supabaseRequest('/rest/v1/student_reviews?select=id,name,school,program,quote,rating,image_path&published=eq.true&order=updated_at.desc&limit=6', {

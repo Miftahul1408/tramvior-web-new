@@ -369,8 +369,15 @@
       <h2>Pengalaman belajar bersama TRAMVIOR</h2>
       <p class="lead">Cerita dari siswa yang sudah mencoba TRAMVIOR. Ulasan ditampilkan setelah ditinjau oleh tim kami.</p>
     </div>
-    <div class="review-grid" id="student-reviews" aria-live="polite">
-      <p class="review-empty">Ulasan siswa akan segera hadir.</p>
+    <div class="review-slider">
+      <div class="review-grid" id="student-reviews" role="region" aria-label="Ulasan siswa" aria-live="polite" tabindex="0">
+        <p class="review-empty">Ulasan siswa akan segera hadir.</p>
+      </div>
+      <div class="review-controls" id="review-controls" hidden>
+        <button class="review-control" id="review-previous" type="button" aria-label="Ulasan sebelumnya">←</button>
+        <p class="review-position" id="review-position" aria-live="polite"></p>
+        <button class="review-control" id="review-next" type="button" aria-label="Ulasan berikutnya">→</button>
+      </div>
     </div>
   </div>
 </section>
