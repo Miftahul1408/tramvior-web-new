@@ -48,6 +48,15 @@ document.addEventListener('DOMContentLoaded', function () {
     quote.className = 'review-quote';
     quote.textContent = '“' + review.quote + '”';
 
+    if (typeof review.image === 'string' && /^data:image\/(?:png|jpeg|webp);base64,/i.test(review.image)) {
+      var screenshot = document.createElement('img');
+      screenshot.className = 'review-screenshot';
+      screenshot.src = review.image;
+      screenshot.alt = 'Screenshot chat ulasan dari ' + review.name;
+      screenshot.loading = 'lazy';
+      card.appendChild(screenshot);
+    }
+
     var author = document.createElement('div');
     author.className = 'review-author';
     var avatar = document.createElement('span');

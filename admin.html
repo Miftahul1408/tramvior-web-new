@@ -273,8 +273,11 @@
       <label class="admin-field"><span>Jurusan / program</span><input id="review-program" type="text" maxlength="80" placeholder="Contoh: Otomotif"></label>
       <label class="admin-field"><span>Rating <b>*</b></span><select id="review-rating" required><option value="5">★★★★★ — 5 bintang</option><option value="4">★★★★☆ — 4 bintang</option><option value="3">★★★☆☆ — 3 bintang</option><option value="2">★★☆☆☆ — 2 bintang</option><option value="1">★☆☆☆☆ — 1 bintang</option></select></label>
       <label class="admin-field"><span>Isi ulasan <b>*</b></span><textarea id="review-quote" rows="4" maxlength="350" placeholder="Tulis pengalaman belajar siswa..." required></textarea></label>
+      <label class="admin-field"><span>Screenshot chat siswa</span><input id="review-image" type="file" accept="image/png,image/jpeg,image/webp"><small class="review-image-help">PNG, JPG, atau WebP, maksimal 2 MB. Disimpan di browser ini.</small></label>
+      <img class="review-image-preview" id="review-image-preview" alt="Pratinjau screenshot ulasan" hidden>
+      <label class="review-image-remove" id="review-image-remove-wrap" hidden><input id="review-image-remove" type="checkbox"> Hapus screenshot tersimpan</label>
       <label class="review-approval"><input id="review-approved" type="checkbox"> <span>Saya sudah mendapat izin siswa untuk menampilkan ulasan ini di website.</span></label>
-      <div class="dialog-note"><span aria-hidden="true">i</span> Ulasan tanpa persetujuan akan tersimpan sebagai menunggu tinjauan.</div>
+      <div class="dialog-note"><span aria-hidden="true">i</span> Ulasan tanpa persetujuan akan tersimpan sebagai menunggu tinjauan. Screenshot hanya tersimpan di browser ini dan belum dikirim ke server.</div>
       <div class="dialog-actions"><button class="admin-button admin-button-secondary" type="button" data-close-review-dialog>Batal</button><button class="admin-button admin-button-primary" type="submit">Simpan ulasan</button></div>
     </form>
   </dialog>
