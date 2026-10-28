@@ -447,6 +447,7 @@ body.admin-body {
 .review-image-preview[hidden],.review-image-remove[hidden] { display: none; }
 .review-image-remove { display: flex; align-items: center; gap: 7px; margin: -4px 0 14px; color: #718097; cursor: pointer; font-size: 10px; }
 .review-image-remove input { accent-color: #df6262; }
+.review-login-error { margin: 0 0 14px; color: #c64040; font-size: 11px; }
 .dialog-note { display: flex; align-items: flex-start; gap: 8px; margin: 3px 0 18px; padding: 10px; border-radius: 7px; background: #f2f8ff; color: #71859f; font-size: 10px; line-height: 1.55; }
 .dialog-note span { color: #1686df; font-weight: 700; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 14px; border-top: 1px solid #edf0f5; }

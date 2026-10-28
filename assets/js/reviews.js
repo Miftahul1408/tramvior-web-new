@@ -4,32 +4,46 @@ document.addEventListener('DOMContentLoaded', function () {
   var container = document.getElementById('student-reviews');
   if (!container) return;
 
-  function isSupportedImageUrl(value) {
-    if (typeof value !== 'string') return false;
-    try {
-      var url = new URL(value);
-      return url.protocol === 'https:' && url.hostname.endsWith('.public.blob.vercel-storage.com');
-    } catch (error) {
-      return false;
+  function getConfig() {
+    var config = window.TRAMVIOR_SUPABASE;
+    if (!config || !config.url || !config.anonKey) {
+      throw new Error('Konfigurasi Supabase belum tersedia.');
     }
+    return { url: config.url.replace(/\/+$/, ''), anonKey: config.anonKey };
+  }
+
+  async function supabaseRequest(path, options) {
+    var config = getConfig();
+    options = options || {};
+    options.headers = Object.assign({
+      apikey: config.anonKey,
+      Authorization: 'Bearer ' + config.anonKey
+    }, options.headers || {});
+    var response = await window.fetch(config.url + path, options);
+    if (!response.ok) throw new Error('Supabase merespons dengan status ' + response.status + '.');
+    return response.json();
+  }
+
+  function getImageUrl(path) {
+    if (!path) return Promise.resolve('');
+    var encodedPath = path.split('/').map(encodeURIComponent).join('/');
+    return supabaseRequest('/storage/v1/object/sign/review-images/' + encodedPath, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expiresIn: 3600 })
+    }).then(function (result) {
+      var config = getConfig();
+      var signedPath = result.signedURL || result.signedUrl;
+      if (!signedPath) throw new Error('Supabase tidak mengembalikan alamat foto.');
+      if (/^https?:\/\//i.test(signedPath)) return signedPath;
+      return config.url + (signedPath.indexOf('/storage/v1/') === 0 ? '' : '/storage/v1') + signedPath;
+    });
   }
 
   function renderReviews(reviews) {
     if (!Array.isArray(reviews)) throw new Error('Format data ulasan tidak valid.');
-    var published = reviews.filter(function (review) {
-      return review &&
-        review.published === true &&
-        typeof review.name === 'string' &&
-        typeof review.school === 'string' &&
-        typeof review.program === 'string' &&
-        typeof review.quote === 'string' &&
-        Number.isInteger(review.rating) &&
-        review.rating >= 1 &&
-        review.rating <= 5;
-    }).slice(0, 6);
-
     container.textContent = '';
-    if (!published.length) {
+    if (!reviews.length) {
       var empty = document.createElement('p');
       empty.className = 'review-empty';
       empty.textContent = 'Ulasan siswa akan segera hadir.';
@@ -37,14 +51,14 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    published.forEach(function (review) {
+    reviews.slice(0, 6).forEach(function (review) {
       var card = document.createElement('article');
       card.className = 'review-card';
 
-      if (isSupportedImageUrl(review.image)) {
+      if (review.imageUrl) {
         var image = document.createElement('img');
         image.className = 'review-screenshot';
-        image.src = review.image;
+        image.src = review.imageUrl;
         image.alt = 'Foto ulasan dari ' + review.name;
         image.loading = 'lazy';
         card.appendChild(image);
@@ -83,9 +97,15 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  window.fetch('/api/reviews?published=1', { cache: 'no-store' }).then(function (response) {
-    if (!response.ok) throw new Error('Server ulasan merespons dengan status ' + response.status + '.');
-    return response.json();
+  supabaseRequest('/rest/v1/student_reviews?select=id,name,school,program,quote,rating,image_path&published=eq.true&order=updated_at.desc&limit=6', {
+    method: 'GET',
+    cache: 'no-store'
+  }).then(function (reviews) {
+    return Promise.all(reviews.map(function (review) {
+      return getImageUrl(review.image_path).then(function (imageUrl) {
+        return Object.assign({}, review, { imageUrl: imageUrl });
+      });
+    }));
   }).then(renderReviews).catch(function (error) {
     container.textContent = 'Ulasan belum dapat dimuat saat ini.';
     console.error('Ulasan TRAMVIOR gagal dimuat.', error);

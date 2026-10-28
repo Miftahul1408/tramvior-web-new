@@ -176,9 +176,9 @@
             <div><div class="admin-eyebrow">KONTEN BERANDA</div><h1 id="reviews-title">Ulasan siswa</h1><p>Kelola ulasan yang ditampilkan sebagai kartu di bagian Ulasan siswa pada beranda.</p></div>
             <button class="admin-button admin-button-primary" type="button" data-create-review><span aria-hidden="true">＋</span> Tambah ulasan</button>
           </div>
-          <div class="notice-banner"><span class="notice-symbol" aria-hidden="true">i</span><p><strong>Ulasan tersimpan di website.</strong> Ulasan yang disetujui dan fotonya tampil untuk semua pengunjung. Token admin diperlukan untuk mengelola ulasan.</p></div>
+          <div class="notice-banner"><span class="notice-symbol" aria-hidden="true">i</span><p><strong>Ulasan tersimpan di Supabase.</strong> Ulasan yang disetujui dan fotonya tampil untuk semua pengunjung.</p></div>
           <div class="review-metrics">
-            <article class="metric-card"><div class="metric-top"><span>Total ulasan</span><span class="metric-icon metric-icon-blue" aria-hidden="true">☆</span></div><strong class="metric-value" id="review-total">0</strong><span class="metric-note">Tersimpan di website</span></article>
+            <article class="metric-card"><div class="metric-top"><span>Total ulasan</span><span class="metric-icon metric-icon-blue" aria-hidden="true">☆</span></div><strong class="metric-value" id="review-total">0</strong><span class="metric-note">Tersimpan di Supabase</span></article>
             <article class="metric-card"><div class="metric-top"><span>Ditampilkan</span><span class="metric-icon metric-icon-teal" aria-hidden="true">✓</span></div><strong class="metric-value" id="review-published">0</strong><span class="metric-note">Terlihat oleh pengunjung</span></article>
             <article class="metric-card"><div class="metric-top"><span>Menunggu tinjauan</span><span class="metric-icon metric-icon-orange" aria-hidden="true">◷</span></div><strong class="metric-value" id="review-pending">0</strong><span class="metric-note">Belum ditampilkan di beranda</span></article>
           </div>
@@ -263,6 +263,16 @@
       <div class="dialog-actions"><button class="admin-button admin-button-secondary" type="button" data-close-dialog>Batal</button><button class="admin-button admin-button-primary" type="submit">Simpan draft</button></div>
     </form>
   </dialog>
+  <dialog class="article-dialog" id="review-login-dialog" aria-labelledby="review-login-title">
+    <form id="review-login-form">
+      <div class="dialog-heading"><div><div class="admin-eyebrow">SUPABASE</div><h2 id="review-login-title">Masuk admin</h2></div><button class="dialog-close" type="button" data-close-review-login aria-label="Tutup">×</button></div>
+      <p class="dialog-intro">Masuk dengan akun admin ulasan yang dibuat di Supabase.</p>
+      <label class="admin-field"><span>Email admin</span><input id="review-admin-email" type="email" autocomplete="username" required></label>
+      <label class="admin-field"><span>Password</span><input id="review-admin-password" type="password" autocomplete="current-password" required></label>
+      <p class="review-login-error" id="review-login-error" role="alert" hidden></p>
+      <div class="dialog-actions"><button class="admin-button admin-button-secondary" type="button" data-close-review-login>Batal</button><button class="admin-button admin-button-primary" type="submit">Masuk</button></div>
+    </form>
+  </dialog>
   <dialog class="article-dialog" id="review-dialog" aria-labelledby="review-dialog-title">
     <form id="review-form">
       <div class="dialog-heading"><div><div class="admin-eyebrow">ULASAN SISWA</div><h2 id="review-dialog-title">Tambah ulasan</h2></div><button class="dialog-close" type="button" data-close-review-dialog aria-label="Tutup">×</button></div>
@@ -277,11 +287,12 @@
       <img class="review-image-preview" id="review-image-preview" alt="Pratinjau foto ulasan" hidden>
       <label class="review-image-remove" id="review-image-remove-wrap" hidden><input id="review-image-remove" type="checkbox"> Hapus foto tersimpan</label>
       <label class="review-approval"><input id="review-approved" type="checkbox"> <span>Saya sudah mendapat izin siswa untuk menampilkan ulasan ini di website.</span></label>
-      <div class="dialog-note"><span aria-hidden="true">i</span> Ulasan dan foto disimpan di server. Ulasan hanya tampil di website setelah persetujuan dicentang.</div>
+      <div class="dialog-note"><span aria-hidden="true">i</span> Ulasan dan foto disimpan di Supabase. Ulasan hanya tampil di website setelah persetujuan dicentang.</div>
       <div class="dialog-actions"><button class="admin-button admin-button-secondary" type="button" data-close-review-dialog>Batal</button><button class="admin-button admin-button-primary" type="submit">Simpan ulasan</button></div>
     </form>
   </dialog>
   <div class="admin-toast" id="admin-toast" role="status" aria-live="polite"></div>
+  <script src="assets/js/supabase-config.js"></script>
   <script src="assets/js/admin.js" defer></script>
 </body>
 </html>

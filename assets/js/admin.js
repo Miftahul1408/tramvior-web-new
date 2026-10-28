@@ -3,7 +3,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
   var storageKey = 'tramvior-admin-drafts-v1';
   var reviewStorageKey = 'tramvior-admin-reviews-v1';
-  var reviewAdminToken = '';
+  var reviewAdminSession = null;
+  var reviewLoginPromise = null;
   var publishedArticles = [
     { title: '5 Tips Sukses Wawancara Kerja untuk Siswa SMK', category: 'Dunia Kerja', file: 'tips-wawancara-kerja-smk.html', image: 'tipssukses.png', updatedAt: '1 Jul 2026' },
     { title: 'Cara Hemat Kuota saat Belajar Online', category: 'Tips Belajar', file: 'hemat-kuota-belajar-online.html', image: 'hemat kouta.png', updatedAt: '1 Jul 2026' },
@@ -26,6 +27,8 @@ document.addEventListener('DOMContentLoaded', function () {
   var sidebarScrim = document.getElementById('sidebar-scrim');
   var reviewDialog = document.getElementById('review-dialog');
   var reviewForm = document.getElementById('review-form');
+  var reviewLoginDialog = document.getElementById('review-login-dialog');
+  var reviewLoginForm = document.getElementById('review-login-form');
   var reviewImagePreviewUrl = '';
 
   function showToast(message, isError) {
@@ -70,30 +73,85 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  function getReviewAdminToken() {
-    if (reviewAdminToken) return reviewAdminToken;
-    reviewAdminToken = window.prompt('Masukkan token admin ulasan:') || '';
-    if (!reviewAdminToken) throw new Error('Token admin diperlukan untuk mengelola ulasan.');
-    return reviewAdminToken;
+  function getSupabaseConfig() {
+    var config = window.TRAMVIOR_SUPABASE;
+    if (!config || !config.url || !config.anonKey) {
+      throw new Error('Koneksi Supabase belum diatur pada assets/js/supabase-config.js.');
+    }
+    return { url: config.url.replace(/\/+$/, ''), anonKey: config.anonKey };
   }
 
-  async function reviewApiRequest(url, options) {
-    options.headers = Object.assign({}, options.headers || {}, {
-      Authorization: 'Bearer ' + getReviewAdminToken()
-    });
-    var response = await window.fetch(url, options);
-    var result;
+  async function supabaseRequest(path, options, accessToken) {
+    var config = getSupabaseConfig();
+    options = options || {};
+    options.headers = Object.assign({
+      apikey: config.anonKey,
+      Authorization: 'Bearer ' + (accessToken || config.anonKey)
+    }, options.headers || {});
+    var response = await window.fetch(config.url + path, options);
+    if (response.status === 401 && accessToken) reviewAdminSession = null;
+    if (response.status === 204) return null;
+    var result = null;
     try {
       result = await response.json();
     } catch (error) {
-      throw new Error('Server ulasan mengirim respons yang tidak dapat dibaca.');
+      if (response.ok) throw new Error('Supabase mengirim respons yang tidak dapat dibaca.');
     }
-    if (response.status === 401) {
-      reviewAdminToken = '';
-      throw new Error('Token admin salah atau sudah tidak berlaku. Coba masukkan lagi.');
-    }
-    if (!response.ok) throw new Error(result.error || 'Permintaan ulasan gagal.');
+    if (!response.ok) throw new Error((result && (result.msg || result.message || result.error_description || result.error)) || 'Permintaan Supabase gagal (' + response.status + ').');
     return result;
+  }
+
+  function requestAdminSession() {
+    if (reviewAdminSession && reviewAdminSession.access_token) {
+      if (!reviewAdminSession.expires_at || reviewAdminSession.expires_at > Date.now() / 1000 + 30) {
+        return Promise.resolve(reviewAdminSession.access_token);
+      }
+      reviewAdminSession = null;
+    }
+    if (reviewLoginPromise) return reviewLoginPromise;
+
+    reviewLoginPromise = new Promise(function (resolve, reject) {
+      reviewLoginDialog.showModal();
+      document.getElementById('review-login-error').hidden = true;
+      document.getElementById('review-admin-email').focus();
+      function finish(error, token) {
+        reviewLoginDialog.removeEventListener('close', onClose);
+        reviewLoginPromise = null;
+        if (error) reject(error);
+        else resolve(token);
+      }
+      function onClose() {
+        finish(new Error('Login admin dibatalkan.'));
+      }
+      reviewLoginDialog.addEventListener('close', onClose, { once: true });
+      reviewLoginForm.onsubmit = async function (event) {
+        event.preventDefault();
+        var submitButton = reviewLoginForm.querySelector('button[type="submit"]');
+        var errorMessage = document.getElementById('review-login-error');
+        submitButton.disabled = true;
+        errorMessage.hidden = true;
+        try {
+          var result = await supabaseRequest('/auth/v1/token?grant_type=password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: document.getElementById('review-admin-email').value.trim(),
+              password: document.getElementById('review-admin-password').value
+            })
+          });
+          reviewAdminSession = result;
+          document.getElementById('review-admin-password').value = '';
+          reviewLoginDialog.close();
+          finish(null, result.access_token);
+        } catch (error) {
+          errorMessage.textContent = 'Login gagal. Periksa email dan password Supabase.';
+          errorMessage.hidden = false;
+        } finally {
+          submitButton.disabled = false;
+        }
+      };
+    });
+    return reviewLoginPromise;
   }
 
   function isValidReview(review) {
@@ -108,7 +166,7 @@ document.addEventListener('DOMContentLoaded', function () {
       review.rating <= 5 &&
       typeof review.published === 'boolean' &&
       typeof review.updatedAt === 'string' &&
-      (review.image === undefined || isSupportedReviewImage(review.image));
+      (!review.image || isSupportedReviewImage(review.image));
   }
 
   function loadLegacyReviews() {
@@ -117,14 +175,34 @@ document.addEventListener('DOMContentLoaded', function () {
     var parsed = JSON.parse(stored);
     if (!Array.isArray(parsed)) throw new Error('Format ulasan lokal tidak valid.');
     return parsed.filter(function (review) {
-      return isValidReview(review) &&
-        (review.image === undefined || isSupportedReviewImage(review.image));
+      return isValidReview(Object.assign({}, review, { image: '' }));
+    }).map(function (review) {
+      var copy = Object.assign({}, review);
+      if (!isSupportedReviewImage(copy.image)) delete copy.image;
+      return copy;
     });
   }
 
   async function loadReviews() {
-    var reviews = await reviewApiRequest('/api/reviews?admin=1', { method: 'GET', cache: 'no-store' });
-    if (!Array.isArray(reviews)) throw new Error('Format ulasan server tidak valid.');
+    var accessToken = await requestAdminSession();
+    var rows = await supabaseRequest('/rest/v1/student_reviews?select=*&order=updated_at.desc', {
+      method: 'GET',
+      cache: 'no-store'
+    }, accessToken);
+    if (!Array.isArray(rows)) throw new Error('Format ulasan Supabase tidak valid.');
+    var reviews = rows.map(function (row) {
+      return {
+        id: row.id,
+        name: row.name,
+        school: row.school,
+        program: row.program,
+        quote: row.quote,
+        rating: row.rating,
+        published: row.published,
+        updatedAt: row.updated_at,
+        image: row.image_path || ''
+      };
+    });
     if (!reviews.every(isValidReview)) throw new Error('Data ulasan server tidak valid.');
 
     if (!reviews.length) {
@@ -149,62 +227,117 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   async function saveReviews(reviews) {
-    var result = await reviewApiRequest('/api/reviews', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reviews: reviews })
+    var accessToken = await requestAdminSession();
+    var preparedReviews = [];
+    for (var reviewIndex = 0; reviewIndex < reviews.length; reviewIndex += 1) {
+      var prepared = Object.assign({}, reviews[reviewIndex]);
+      if (typeof prepared.image === 'string' && /^data:image\/(?:png|jpeg|webp);base64,/i.test(prepared.image)) {
+        var imageBlob = await window.fetch(prepared.image).then(function (response) { return response.blob(); });
+        var extension = imageBlob.type === 'image/jpeg' ? 'jpg' : imageBlob.type.split('/')[1];
+        prepared.image = await uploadReviewImage(new File([imageBlob], 'review.' + extension, { type: imageBlob.type }), accessToken);
+      }
+      preparedReviews.push(prepared);
+    }
+
+    var rows = preparedReviews.map(function (review) {
+      return {
+        id: review.id,
+        name: review.name,
+        school: review.school,
+        program: review.program,
+        quote: review.quote,
+        rating: review.rating,
+        published: review.published,
+        updated_at: review.updatedAt,
+        image_path: review.image || null
+      };
     });
-    if (!Array.isArray(result.reviews)) throw new Error('Server tidak mengembalikan data ulasan yang tersimpan.');
-    return result.reviews;
+    var result = rows.length
+      ? await supabaseRequest('/rest/v1/student_reviews?on_conflict=id', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Prefer: 'resolution=merge-duplicates,return=representation'
+        },
+        body: JSON.stringify(rows)
+      }, accessToken)
+      : [];
+    if (!Array.isArray(result)) throw new Error('Ulasan tidak berhasil disimpan ke Supabase.');
+
+    var retainedIds = new Set(preparedReviews.map(function (review) { return review.id; }));
+    var removedReviews = studentReviews.filter(function (review) { return !retainedIds.has(review.id); });
+    for (var index = 0; index < removedReviews.length; index += 1) {
+      await supabaseRequest('/rest/v1/student_reviews?id=eq.' + encodeURIComponent(removedReviews[index].id), {
+        method: 'DELETE'
+      }, accessToken);
+    }
+    var retainedImages = new Set(preparedReviews.map(function (review) { return review.image; }).filter(Boolean));
+    var replacedImages = studentReviews.map(function (review) { return review.image; })
+      .filter(function (path) { return path && !retainedImages.has(path); });
+    for (var imageIndex = 0; imageIndex < replacedImages.length; imageIndex += 1) {
+      try {
+        await removeReviewImage(replacedImages[imageIndex], accessToken);
+      } catch (error) {
+        showToast('Ulasan tersimpan, tetapi foto lama tidak dapat dihapus. ' + error.message, true);
+      }
+    }
+    return result.map(function (row) {
+      return {
+        id: row.id,
+        name: row.name,
+        school: row.school,
+        program: row.program,
+        quote: row.quote,
+        rating: row.rating,
+        published: row.published,
+        updatedAt: row.updated_at,
+        image: row.image_path || ''
+      };
+    });
   }
 
   function isSupportedReviewImage(value) {
     if (typeof value !== 'string') return false;
     if (/^data:image\/(?:png|jpeg|webp);base64,/i.test(value)) return true;
-    if (/^private:[a-zA-Z0-9_-]{1,100}$/.test(value)) return true;
-    try {
-      var url = new URL(value);
-      return url.protocol === 'https:' && url.hostname.endsWith('.public.blob.vercel-storage.com');
-    } catch (error) {
-      return false;
-    }
+    return /^[a-zA-Z0-9_-]+\.(?:png|jpg|webp)$/.test(value);
   }
 
-  function loadPrivateReviewImage(review) {
-    var preview = document.getElementById('review-image-preview');
-    var requestUrl = '/api/review-image?reviewId=' + encodeURIComponent(review.id);
-    window.fetch(requestUrl, {
-      headers: { Authorization: 'Bearer ' + getReviewAdminToken() }
-    }).then(function (response) {
-      if (response.status === 401) reviewAdminToken = '';
-      if (!response.ok) throw new Error('Foto tersimpan tidak dapat dimuat (status ' + response.status + ').');
-      return response.blob();
-    }).then(function (imageBlob) {
-      if (!reviewDialog.open ||
-        document.getElementById('review-id').value !== review.id ||
-        document.getElementById('review-image').files.length ||
-        document.getElementById('review-image-remove').checked) return;
-      if (reviewImagePreviewUrl) URL.revokeObjectURL(reviewImagePreviewUrl);
-      reviewImagePreviewUrl = URL.createObjectURL(imageBlob);
-      preview.src = reviewImagePreviewUrl;
-      preview.hidden = false;
-    }).catch(function (error) {
-      showToast(error.message, true);
+  function getReviewImageUrl(path, accessToken) {
+    var encodedPath = path.split('/').map(encodeURIComponent).join('/');
+    return supabaseRequest('/storage/v1/object/sign/review-images/' + encodedPath, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expiresIn: 3600 })
+    }, accessToken).then(function (result) {
+      var config = getSupabaseConfig();
+      var signedPath = result.signedURL || result.signedUrl;
+      if (!signedPath) throw new Error('Supabase tidak mengembalikan alamat foto.');
+      if (/^https?:\/\//i.test(signedPath)) return signedPath;
+      return config.url + (signedPath.indexOf('/storage/v1/') === 0 ? '' : '/storage/v1') + signedPath;
     });
   }
 
-  function readImageAsDataUrl(file) {
-    return new Promise(function (resolve, reject) {
-      var reader = new FileReader();
-      reader.addEventListener('load', function () {
-        if (typeof reader.result === 'string') resolve(reader.result);
-        else reject(new Error('Foto gagal dibaca sebagai gambar.'));
-      });
-      reader.addEventListener('error', function () {
-        reject(new Error('Foto gagal dibaca. Coba pilih file lain.'));
-      });
-      reader.readAsDataURL(file);
-    });
+  async function uploadReviewImage(file, accessToken) {
+    var extension = file.type === 'image/jpeg' ? 'jpg' : file.type.split('/')[1];
+    var path = window.crypto.randomUUID() + '.' + extension;
+    await supabaseRequest('/storage/v1/object/review-images/' + encodeURIComponent(path), {
+      method: 'POST',
+      headers: {
+        'Content-Type': file.type,
+        'x-upsert': 'true'
+      },
+      body: file
+    }, accessToken);
+    return path;
+  }
+
+  async function removeReviewImage(path, accessToken) {
+    if (!path) return;
+    await supabaseRequest('/storage/v1/object/remove/review-images', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prefixes: [path] })
+    }, accessToken);
   }
 
   function makeElement(tag, className, text) {
@@ -428,10 +561,18 @@ document.addEventListener('DOMContentLoaded', function () {
     reviewImagePreviewUrl = '';
     imagePreview.hidden = !review || !isSupportedReviewImage(review.image);
     imagePreview.removeAttribute('src');
-    if (!imagePreview.hidden && /^private:/.test(review.image)) {
-      loadPrivateReviewImage(review);
-    } else if (!imagePreview.hidden) {
+    if (!imagePreview.hidden && /^data:image\//.test(review.image)) {
       imagePreview.src = review.image;
+    } else if (!imagePreview.hidden) {
+      getReviewImageUrl(review.image, reviewAdminSession && reviewAdminSession.access_token).then(function (url) {
+        if (!reviewDialog.open ||
+          document.getElementById('review-id').value !== review.id ||
+          document.getElementById('review-image').files.length ||
+          document.getElementById('review-image-remove').checked) return;
+        imagePreview.src = url;
+      }).catch(function (error) {
+        showToast('Foto ulasan tidak dapat dimuat. ' + error.message, true);
+      });
     }
     imageRemoveWrap.hidden = imagePreview.hidden;
     imageRemove.checked = false;
@@ -595,6 +736,9 @@ document.addEventListener('DOMContentLoaded', function () {
   document.querySelectorAll('[data-close-review-dialog]').forEach(function (button) {
     button.addEventListener('click', function () { reviewDialog.close(); });
   });
+  document.querySelectorAll('[data-close-review-login]').forEach(function (button) {
+    button.addEventListener('click', function () { reviewLoginDialog.close(); });
+  });
   document.getElementById('review-image').addEventListener('change', function (event) {
     var file = event.target.files[0];
     var preview = document.getElementById('review-image-preview');
@@ -720,7 +864,7 @@ document.addEventListener('DOMContentLoaded', function () {
     submitButton.disabled = true;
     try {
       if (imageFile) {
-        review.image = await readImageAsDataUrl(imageFile);
+        review.image = await uploadReviewImage(imageFile, await requestAdminSession());
       } else if (!removeImage && existingReview && isSupportedReviewImage(existingReview.image)) {
         review.image = existingReview.image;
       }
