@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   var storageKey = 'tramvior-admin-drafts-v1';
   var reviewStorageKey = 'tramvior-admin-reviews-v1';
+  var reviewAdminToken = '';
   var publishedArticles = [
     { title: '5 Tips Sukses Wawancara Kerja untuk Siswa SMK', category: 'Dunia Kerja', file: 'tips-wawancara-kerja-smk.html', image: 'tipssukses.png', updatedAt: '1 Jul 2026' },
     { title: 'Cara Hemat Kuota saat Belajar Online', category: 'Tips Belajar', file: 'hemat-kuota-belajar-online.html', image: 'hemat kouta.png', updatedAt: '1 Jul 2026' },
@@ -12,6 +13,8 @@ document.addEventListener('DOMContentLoaded', function () {
   ];
   var draftArticles = [];
   var studentReviews = [];
+  var reviewsLoaded = false;
+  var reviewsLoading = false;
   var currentFilter = 'all';
   var currentReviewFilter = 'all';
   var toastTimer;
@@ -67,45 +70,141 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  function loadReviews() {
-    try {
-      var stored = window.localStorage.getItem(reviewStorageKey);
-      if (!stored) return [];
-
-      var parsed = JSON.parse(stored);
-      if (!Array.isArray(parsed)) throw new Error('Format ulasan tidak valid.');
-
-      return parsed.filter(function (review) {
-        return review &&
-          typeof review.id === 'string' &&
-          typeof review.name === 'string' &&
-          typeof review.school === 'string' &&
-          typeof review.program === 'string' &&
-          typeof review.quote === 'string' &&
-          Number.isInteger(review.rating) &&
-          review.rating >= 1 &&
-          review.rating <= 5 &&
-          typeof review.published === 'boolean' &&
-          typeof review.updatedAt === 'string';
-      });
-    } catch (error) {
-      showToast('Ulasan tidak dapat dibaca dari penyimpanan browser. ' + error.message, true);
-      return [];
-    }
+  function getReviewAdminToken() {
+    if (reviewAdminToken) return reviewAdminToken;
+    reviewAdminToken = window.prompt('Masukkan token admin ulasan:') || '';
+    if (!reviewAdminToken) throw new Error('Token admin diperlukan untuk mengelola ulasan.');
+    return reviewAdminToken;
   }
 
-  function saveReviews() {
+  async function reviewApiRequest(url, options) {
+    options.headers = Object.assign({}, options.headers || {}, {
+      Authorization: 'Bearer ' + getReviewAdminToken()
+    });
+    var response = await window.fetch(url, options);
+    var result;
     try {
-      window.localStorage.setItem(reviewStorageKey, JSON.stringify(studentReviews));
-      return true;
+      result = await response.json();
     } catch (error) {
-      showToast('Ulasan gagal disimpan di browser. ' + error.message, true);
+      throw new Error('Server ulasan mengirim respons yang tidak dapat dibaca.');
+    }
+    if (response.status === 401) {
+      reviewAdminToken = '';
+      throw new Error('Token admin salah atau sudah tidak berlaku. Coba masukkan lagi.');
+    }
+    if (!response.ok) throw new Error(result.error || 'Permintaan ulasan gagal.');
+    return result;
+  }
+
+  function isValidReview(review) {
+    return review &&
+      typeof review.id === 'string' &&
+      typeof review.name === 'string' &&
+      typeof review.school === 'string' &&
+      typeof review.program === 'string' &&
+      typeof review.quote === 'string' &&
+      Number.isInteger(review.rating) &&
+      review.rating >= 1 &&
+      review.rating <= 5 &&
+      typeof review.published === 'boolean' &&
+      typeof review.updatedAt === 'string' &&
+      (review.image === undefined || isSupportedReviewImage(review.image));
+  }
+
+  function loadLegacyReviews() {
+    var stored = window.localStorage.getItem(reviewStorageKey);
+    if (!stored) return [];
+    var parsed = JSON.parse(stored);
+    if (!Array.isArray(parsed)) throw new Error('Format ulasan lokal tidak valid.');
+    return parsed.filter(function (review) {
+      return isValidReview(review) &&
+        (review.image === undefined || isSupportedReviewImage(review.image));
+    });
+  }
+
+  async function loadReviews() {
+    var reviews = await reviewApiRequest('/api/reviews?admin=1', { method: 'GET', cache: 'no-store' });
+    if (!Array.isArray(reviews)) throw new Error('Format ulasan server tidak valid.');
+    if (!reviews.every(isValidReview)) throw new Error('Data ulasan server tidak valid.');
+
+    if (!reviews.length) {
+      var legacyReviews;
+      try {
+        legacyReviews = loadLegacyReviews();
+      } catch (error) {
+        showToast('Data ulasan lama di browser tidak dapat dibaca. ' + error.message, true);
+        return reviews;
+      }
+      if (legacyReviews.length) {
+        showToast('Memindahkan ulasan lama dari browser ke penyimpanan website.');
+        reviews = await saveReviews(legacyReviews);
+        try {
+          window.localStorage.removeItem(reviewStorageKey);
+        } catch (error) {
+          showToast('Ulasan telah dipindahkan, tetapi salinan lama di browser tidak dapat dihapus.', true);
+        }
+      }
+    }
+    return reviews;
+  }
+
+  async function saveReviews(reviews) {
+    var result = await reviewApiRequest('/api/reviews', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reviews: reviews })
+    });
+    if (!Array.isArray(result.reviews)) throw new Error('Server tidak mengembalikan data ulasan yang tersimpan.');
+    return result.reviews;
+  }
+
+  function isSupportedReviewImage(value) {
+    if (typeof value !== 'string') return false;
+    if (/^data:image\/(?:png|jpeg|webp);base64,/i.test(value)) return true;
+    if (/^private:[a-zA-Z0-9_-]{1,100}$/.test(value)) return true;
+    try {
+      var url = new URL(value);
+      return url.protocol === 'https:' && url.hostname.endsWith('.public.blob.vercel-storage.com');
+    } catch (error) {
       return false;
     }
   }
 
-  function isSupportedImageData(value) {
-    return typeof value === 'string' && /^data:image\/(?:png|jpeg|webp);base64,/i.test(value);
+  function loadPrivateReviewImage(review) {
+    var preview = document.getElementById('review-image-preview');
+    var requestUrl = '/api/review-image?reviewId=' + encodeURIComponent(review.id);
+    window.fetch(requestUrl, {
+      headers: { Authorization: 'Bearer ' + getReviewAdminToken() }
+    }).then(function (response) {
+      if (response.status === 401) reviewAdminToken = '';
+      if (!response.ok) throw new Error('Foto tersimpan tidak dapat dimuat (status ' + response.status + ').');
+      return response.blob();
+    }).then(function (imageBlob) {
+      if (!reviewDialog.open ||
+        document.getElementById('review-id').value !== review.id ||
+        document.getElementById('review-image').files.length ||
+        document.getElementById('review-image-remove').checked) return;
+      if (reviewImagePreviewUrl) URL.revokeObjectURL(reviewImagePreviewUrl);
+      reviewImagePreviewUrl = URL.createObjectURL(imageBlob);
+      preview.src = reviewImagePreviewUrl;
+      preview.hidden = false;
+    }).catch(function (error) {
+      showToast(error.message, true);
+    });
+  }
+
+  function readImageAsDataUrl(file) {
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.addEventListener('load', function () {
+        if (typeof reader.result === 'string') resolve(reader.result);
+        else reject(new Error('Foto gagal dibaca sebagai gambar.'));
+      });
+      reader.addEventListener('error', function () {
+        reject(new Error('Foto gagal dibaca. Coba pilih file lain.'));
+      });
+      reader.readAsDataURL(file);
+    });
   }
 
   function makeElement(tag, className, text) {
@@ -327,43 +426,52 @@ document.addEventListener('DOMContentLoaded', function () {
     imageInput.value = '';
     if (reviewImagePreviewUrl) URL.revokeObjectURL(reviewImagePreviewUrl);
     reviewImagePreviewUrl = '';
-    imagePreview.hidden = !review || !isSupportedImageData(review.image);
-    imagePreview.src = imagePreview.hidden ? '' : review.image;
+    imagePreview.hidden = !review || !isSupportedReviewImage(review.image);
+    imagePreview.removeAttribute('src');
+    if (!imagePreview.hidden && /^private:/.test(review.image)) {
+      loadPrivateReviewImage(review);
+    } else if (!imagePreview.hidden) {
+      imagePreview.src = review.image;
+    }
     imageRemoveWrap.hidden = imagePreview.hidden;
     imageRemove.checked = false;
     reviewDialog.showModal();
     document.getElementById('review-name').focus();
   }
 
-  function toggleReviewVisibility(id) {
+  async function toggleReviewVisibility(id) {
     var review = studentReviews.find(function (item) { return item.id === id; });
     if (!review) return;
     if (!review.published && !window.confirm('Pastikan siswa telah menyetujui publikasi ulasan ini. Tampilkan sekarang?')) return;
-    var previousReviews = studentReviews.map(function (item) {
-      return item.id === id ? Object.assign({}, item) : item;
-    });
-    studentReviews = studentReviews.map(function (item) {
+    var previousReviews = studentReviews;
+    var updatedReviews = studentReviews.map(function (item) {
       return item.id === id ? Object.assign({}, item, { published: !item.published }) : item;
     });
-    if (!saveReviews()) {
+    try {
+      studentReviews = await saveReviews(updatedReviews);
+    } catch (error) {
       studentReviews = previousReviews;
+      showToast('Perubahan ulasan gagal disimpan. ' + error.message, true);
       return;
     }
     renderReviews();
-    showToast(review.published ? 'Ulasan disembunyikan dari beranda.' : 'Ulasan tampil di beranda browser ini.');
+    showToast(review.published ? 'Ulasan disembunyikan dari website.' : 'Ulasan tampil di website.');
   }
 
-  function deleteReview(id) {
+  async function deleteReview(id) {
     var review = studentReviews.find(function (item) { return item.id === id; });
-    if (!review || !window.confirm('Hapus ulasan "' + review.name + '" dari browser ini?')) return;
-    var previousReviews = studentReviews.slice();
-    studentReviews = studentReviews.filter(function (item) { return item.id !== id; });
-    if (!saveReviews()) {
+    if (!review || !window.confirm('Hapus ulasan "' + review.name + '" dari website?')) return;
+    var previousReviews = studentReviews;
+    var updatedReviews = studentReviews.filter(function (item) { return item.id !== id; });
+    try {
+      studentReviews = await saveReviews(updatedReviews);
+    } catch (error) {
       studentReviews = previousReviews;
+      showToast('Ulasan gagal dihapus. ' + error.message, true);
       return;
     }
     renderReviews();
-    showToast('Ulasan berhasil dihapus dari browser ini.');
+    showToast('Ulasan berhasil dihapus dari website.');
   }
 
   var today = new Intl.DateTimeFormat('id-ID', {
@@ -400,6 +508,18 @@ document.addEventListener('DOMContentLoaded', function () {
   function setActiveView(viewName) {
     var view = document.getElementById('view-' + viewName);
     if (!view) return;
+    if (viewName === 'reviews' && !reviewsLoaded && !reviewsLoading) {
+      reviewsLoading = true;
+      loadReviews().then(function (reviews) {
+        studentReviews = reviews;
+        reviewsLoaded = true;
+        renderReviews();
+      }).catch(function (error) {
+        showToast('Ulasan website tidak dapat dimuat. ' + error.message, true);
+      }).finally(function () {
+        reviewsLoading = false;
+      });
+    }
     document.querySelectorAll('.admin-view').forEach(function (section) {
       var isActive = section === view;
       section.hidden = !isActive;
@@ -427,7 +547,6 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   draftArticles = loadDrafts();
-  studentReviews = loadReviews();
   renderArticles();
   renderReviews();
 
@@ -441,7 +560,14 @@ document.addEventListener('DOMContentLoaded', function () {
     button.addEventListener('click', function () { openDraft(null); });
   });
   document.querySelectorAll('[data-create-review]').forEach(function (button) {
-    button.addEventListener('click', function () { openReview(null); });
+    button.addEventListener('click', function () {
+      if (!reviewsLoaded) {
+        setActiveView('reviews');
+        showToast('Tunggu hingga data ulasan selesai dimuat.', true);
+        return;
+      }
+      openReview(null);
+    });
   });
   document.querySelectorAll('[data-close-dialog]').forEach(function (button) {
     button.addEventListener('click', function () { dialog.close(); });
@@ -482,7 +608,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     if (file.size > 2 * 1024 * 1024) {
       event.target.value = '';
-      showToast('Ukuran screenshot maksimal 2 MB.', true);
+      showToast('Ukuran foto maksimal 2 MB.', true);
       return;
     }
     if (reviewImagePreviewUrl) URL.revokeObjectURL(reviewImagePreviewUrl);
@@ -497,7 +623,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!event.target.checked) {
       var reviewId = document.getElementById('review-id').value;
       var existingReview = studentReviews.find(function (review) { return review.id === reviewId; });
-      if (existingReview && isSupportedImageData(existingReview.image)) {
+      if (existingReview && isSupportedReviewImage(existingReview.image)) {
         preview.src = existingReview.image;
         preview.hidden = false;
       }
@@ -557,42 +683,59 @@ document.addEventListener('DOMContentLoaded', function () {
     showToast(existingDraft ? 'Perubahan draft tersimpan di browser ini.' : 'Draft tersimpan di browser ini.');
   });
 
-  reviewForm.addEventListener('submit', function (event) {
+  reviewForm.addEventListener('submit', async function (event) {
     event.preventDefault();
+    if (!reviewsLoaded) {
+      showToast('Data ulasan website belum berhasil dimuat.', true);
+      return;
+    }
     if (!reviewForm.reportValidity()) return;
 
     var id = document.getElementById('review-id').value;
     var existingReview = studentReviews.find(function (review) { return review.id === id; });
     var imageInput = document.getElementById('review-image');
     var imageFile = imageInput.files[0];
+    if (imageFile && (!/^image\/(?:png|jpeg|webp)$/.test(imageFile.type) || imageFile.size > 2 * 1024 * 1024)) {
+      showToast('Pilih foto PNG, JPG, atau WebP maksimal 2 MB.', true);
+      return;
+    }
 
-    function saveReview(imageData) {
-      var review = {
-        id: id || (window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : 'review-' + Date.now()),
-        name: document.getElementById('review-name').value.trim(),
-        school: document.getElementById('review-school').value.trim(),
-        program: document.getElementById('review-program').value.trim(),
-        rating: Number(document.getElementById('review-rating').value),
-        quote: document.getElementById('review-quote').value.trim(),
-        published: document.getElementById('review-approved').checked,
-        updatedAt: new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium' }).format(new Date())
-      };
-      if (imageData) review.image = imageData;
-      if (!review.name || !review.school || !review.quote || !Number.isInteger(review.rating) || review.rating < 1 || review.rating > 5) {
-        showToast('Lengkapi nama, sekolah, isi ulasan, dan rating yang valid.', true);
-        return;
+    var review = {
+      id: id || (window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : 'review-' + Date.now()),
+      name: document.getElementById('review-name').value.trim(),
+      school: document.getElementById('review-school').value.trim(),
+      program: document.getElementById('review-program').value.trim(),
+      rating: Number(document.getElementById('review-rating').value),
+      quote: document.getElementById('review-quote').value.trim(),
+      published: document.getElementById('review-approved').checked,
+      updatedAt: new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium' }).format(new Date())
+    };
+    if (!review.name || !review.school || !review.quote || !Number.isInteger(review.rating) || review.rating < 1 || review.rating > 5) {
+      showToast('Lengkapi nama, sekolah, isi ulasan, dan rating yang valid.', true);
+      return;
+    }
+
+    var removeImage = document.getElementById('review-image-remove').checked;
+    var submitButton = reviewForm.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    try {
+      if (imageFile) {
+        review.image = await readImageAsDataUrl(imageFile);
+      } else if (!removeImage && existingReview && isSupportedReviewImage(existingReview.image)) {
+        review.image = existingReview.image;
       }
 
-      var previousReviews = studentReviews.slice();
-      if (existingReview) {
-        studentReviews = studentReviews.map(function (item) { return item.id === id ? review : item; });
-      } else {
-        studentReviews.unshift(review);
-      }
-      if (!saveReviews()) {
+      var previousReviews = studentReviews;
+      var updatedReviews = existingReview
+        ? studentReviews.map(function (item) { return item.id === id ? review : item; })
+        : [review].concat(studentReviews);
+      try {
+        studentReviews = await saveReviews(updatedReviews);
+      } catch (error) {
         studentReviews = previousReviews;
-        return;
+        throw error;
       }
+
       renderReviews();
       reviewDialog.close();
       reviewForm.reset();
@@ -604,30 +747,11 @@ document.addEventListener('DOMContentLoaded', function () {
       reviewImagePreviewUrl = '';
       document.getElementById('review-image-remove-wrap').hidden = true;
       setActiveView('reviews');
-      showToast(existingReview ? 'Perubahan ulasan tersimpan di browser ini.' : 'Ulasan tersimpan di browser ini.');
+      showToast(existingReview ? 'Perubahan ulasan tersimpan di website.' : 'Ulasan tersimpan di website.');
+    } catch (error) {
+      showToast('Ulasan gagal disimpan. ' + error.message, true);
+    } finally {
+      submitButton.disabled = false;
     }
-
-    if (imageFile) {
-      if (!/^image\/(?:png|jpeg|webp)$/.test(imageFile.type) || imageFile.size > 2 * 1024 * 1024) {
-        showToast('Pilih screenshot PNG, JPG, atau WebP maksimal 2 MB.', true);
-        return;
-      }
-      var reader = new FileReader();
-      reader.addEventListener('load', function () {
-        if (!isSupportedImageData(reader.result)) {
-          showToast('Screenshot gagal dibaca sebagai gambar yang didukung.', true);
-          return;
-        }
-        saveReview(reader.result);
-      });
-      reader.addEventListener('error', function () {
-        showToast('Screenshot gagal dibaca. Coba pilih file lain.', true);
-      });
-      reader.readAsDataURL(imageFile);
-      return;
-    }
-
-    var removeImage = document.getElementById('review-image-remove').checked;
-    saveReview(removeImage ? '' : (existingReview && isSupportedImageData(existingReview.image) ? existingReview.image : ''));
   });
 });

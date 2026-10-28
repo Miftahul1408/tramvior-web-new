@@ -84,7 +84,7 @@
 
           <div class="notice-banner">
             <span class="notice-symbol" aria-hidden="true">i</span>
-            <p><strong>Panel demonstrasi.</strong> Website ini menggunakan file statis; belum ada login, database, analitik, atau penyimpanan pendaftaran di server. Draft yang dibuat di sini hanya tersimpan di browser ini.</p>
+            <p><strong>Panel pengelolaan konten.</strong> Artikel dan draft masih dikelola sebagai file atau tersimpan lokal. Ulasan menggunakan penyimpanan server dan token admin.</p>
             <button class="notice-dismiss" type="button" aria-label="Tutup pemberitahuan">×</button>
           </div>
 
@@ -176,10 +176,10 @@
             <div><div class="admin-eyebrow">KONTEN BERANDA</div><h1 id="reviews-title">Ulasan siswa</h1><p>Kelola ulasan yang ditampilkan sebagai kartu di bagian Ulasan siswa pada beranda.</p></div>
             <button class="admin-button admin-button-primary" type="button" data-create-review><span aria-hidden="true">＋</span> Tambah ulasan</button>
           </div>
-          <div class="notice-banner"><span class="notice-symbol" aria-hidden="true">i</span><p><strong>Penyimpanan lokal browser.</strong> Ulasan terbit tampil di beranda pada browser yang sama. Situs statis ini belum memiliki database/API, jadi perubahan tidak tersinkron untuk pengunjung lain atau perangkat berbeda.</p></div>
+          <div class="notice-banner"><span class="notice-symbol" aria-hidden="true">i</span><p><strong>Ulasan tersimpan di website.</strong> Ulasan yang disetujui dan fotonya tampil untuk semua pengunjung. Token admin diperlukan untuk mengelola ulasan.</p></div>
           <div class="review-metrics">
-            <article class="metric-card"><div class="metric-top"><span>Total ulasan</span><span class="metric-icon metric-icon-blue" aria-hidden="true">☆</span></div><strong class="metric-value" id="review-total">0</strong><span class="metric-note">Tersimpan di browser ini</span></article>
-            <article class="metric-card"><div class="metric-top"><span>Ditampilkan</span><span class="metric-icon metric-icon-teal" aria-hidden="true">✓</span></div><strong class="metric-value" id="review-published">0</strong><span class="metric-note">Terlihat di beranda browser ini</span></article>
+            <article class="metric-card"><div class="metric-top"><span>Total ulasan</span><span class="metric-icon metric-icon-blue" aria-hidden="true">☆</span></div><strong class="metric-value" id="review-total">0</strong><span class="metric-note">Tersimpan di website</span></article>
+            <article class="metric-card"><div class="metric-top"><span>Ditampilkan</span><span class="metric-icon metric-icon-teal" aria-hidden="true">✓</span></div><strong class="metric-value" id="review-published">0</strong><span class="metric-note">Terlihat oleh pengunjung</span></article>
             <article class="metric-card"><div class="metric-top"><span>Menunggu tinjauan</span><span class="metric-icon metric-icon-orange" aria-hidden="true">◷</span></div><strong class="metric-value" id="review-pending">0</strong><span class="metric-note">Belum ditampilkan di beranda</span></article>
           </div>
           <section class="panel-card content-panel">
@@ -273,11 +273,11 @@
       <label class="admin-field"><span>Jurusan / program</span><input id="review-program" type="text" maxlength="80" placeholder="Contoh: Otomotif"></label>
       <label class="admin-field"><span>Rating <b>*</b></span><select id="review-rating" required><option value="5">★★★★★ — 5 bintang</option><option value="4">★★★★☆ — 4 bintang</option><option value="3">★★★☆☆ — 3 bintang</option><option value="2">★★☆☆☆ — 2 bintang</option><option value="1">★☆☆☆☆ — 1 bintang</option></select></label>
       <label class="admin-field"><span>Isi ulasan <b>*</b></span><textarea id="review-quote" rows="4" maxlength="350" placeholder="Tulis pengalaman belajar siswa..." required></textarea></label>
-      <label class="admin-field"><span>Screenshot chat siswa</span><input id="review-image" type="file" accept="image/png,image/jpeg,image/webp"><small class="review-image-help">PNG, JPG, atau WebP, maksimal 2 MB. Disimpan di browser ini.</small></label>
-      <img class="review-image-preview" id="review-image-preview" alt="Pratinjau screenshot ulasan" hidden>
-      <label class="review-image-remove" id="review-image-remove-wrap" hidden><input id="review-image-remove" type="checkbox"> Hapus screenshot tersimpan</label>
+      <label class="admin-field review-image-field"><span>Foto ulasan <small>(opsional)</small></span><input id="review-image" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="review-image-help"><small class="review-image-help" id="review-image-help">Pilih foto atau screenshot chat (PNG, JPG, WebP; maksimal 2 MB).</small></label>
+      <img class="review-image-preview" id="review-image-preview" alt="Pratinjau foto ulasan" hidden>
+      <label class="review-image-remove" id="review-image-remove-wrap" hidden><input id="review-image-remove" type="checkbox"> Hapus foto tersimpan</label>
       <label class="review-approval"><input id="review-approved" type="checkbox"> <span>Saya sudah mendapat izin siswa untuk menampilkan ulasan ini di website.</span></label>
-      <div class="dialog-note"><span aria-hidden="true">i</span> Ulasan tanpa persetujuan akan tersimpan sebagai menunggu tinjauan. Screenshot hanya tersimpan di browser ini dan belum dikirim ke server.</div>
+      <div class="dialog-note"><span aria-hidden="true">i</span> Ulasan dan foto disimpan di server. Ulasan hanya tampil di website setelah persetujuan dicentang.</div>
       <div class="dialog-actions"><button class="admin-button admin-button-secondary" type="button" data-close-review-dialog>Batal</button><button class="admin-button admin-button-primary" type="submit">Simpan ulasan</button></div>
     </form>
   </dialog>

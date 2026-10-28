@@ -438,6 +438,10 @@ body.admin-body {
 .admin-field textarea { resize: vertical; }
 .admin-field input:focus,.admin-field select:focus,.admin-field textarea:focus { border-color: #73b9f3; box-shadow: 0 0 0 3px rgba(22,140,240,.1); }
 .admin-field input::placeholder,.admin-field textarea::placeholder { color: #a6afbd; }
+.review-image-field input[type="file"] { min-height: 45px; padding: 6px; background: #f8fbff; cursor: pointer; }
+.review-image-field input[type="file"]::file-selector-button { margin-right: 10px; padding: 7px 10px; border: 0; border-radius: 5px; background: #e7f3ff; color: #147fd4; cursor: pointer; font: 600 10px var(--font-body); }
+.review-image-field input[type="file"]::-webkit-file-upload-button { margin-right: 10px; padding: 7px 10px; border: 0; border-radius: 5px; background: #e7f3ff; color: #147fd4; cursor: pointer; font: 600 10px var(--font-body); }
+.review-image-field > span small { color: #929caf; font-size: 10px; font-weight: 400; }
 .review-image-help { display: block; margin-top: 5px; color: #929caf; font-size: 9px; line-height: 1.5; }
 .review-image-preview { display: block; max-width: 100%; max-height: 180px; margin: -4px 0 14px; border: 1px solid #e3e8ef; border-radius: 7px; object-fit: contain; }
 .review-image-preview[hidden],.review-image-remove[hidden] { display: none; }
